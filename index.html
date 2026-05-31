@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Daily Brief — Premium News Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Playfair Display"', 'Georgia', 'serif'],
+                        body: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        ink: {
+                            50: '#faf9f7',
+                            100: '#f3f1ed',
+                            200: '#e8e4dd',
+                            300: '#d4cfc5',
+                            400: '#a8a196',
+                            500: '#7a7267',
+                            600: '#5c554b',
+                            700: '#3d3832',
+                            800: '#2a2520',
+                            900: '#1a1613',
+                            950: '#0d0b0a',
+                        },
+                        amber: {
+                            400: '#e8a838',
+                            500: '#d4922a',
+                            600: '#b87a1f',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Source Sans 3', system-ui, sans-serif; }
+        .font-display { font-family: 'Playfair Display', Georgia, serif; }
+
+        html.dark {
+            --bg-primary: #0d0b0a;
+            --bg-card: #1a1613;
+            --bg-glass: rgba(13, 11, 10, 0.85);
+            --bg-sidebar: rgba(26, 22, 19, 0.95);
+            --text-primary: #f3f1ed;
+            --text-secondary: #a8a196;
+            --text-muted: #7a7267;
+            --border: #3d3832;
+            --accent: #e8a838;
+            --accent-dim: rgba(232, 168, 56, 0.1);
+        }
+        html.light {
+            --bg-primary: #faf9f7;
+            --bg-card: #ffffff;
+            --bg-glass: rgba(250, 249, 247, 0.85);
+            --bg-sidebar: rgba(255, 255, 255, 0.95);
+            --text-primary: #1a1613;
+            --text-secondary: #5c554b;
+            --text-muted: #a8a196;
+            --border: #e8e4dd;
+            --accent: #d4922a;
+            --accent-dim: rgba(212, 146, 42, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .card-glass {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-glass:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.12);
+        }
+        html.dark .card-glass:hover {
+            box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar-glass {
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+        }
+
+        .sidebar-item {
+            position: relative;
+            padding: 10px 20px 10px 24px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.25s ease;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .sidebar-item:hover {
+            color: var(--text-primary);
+            background: var(--accent-dim);
+        }
+        .sidebar-item.active {
+            color: var(--accent);
+            border-left-color: var(--accent);
+            background: var(--accent-dim);
+            font-weight: 600;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+        .accordion-content.open { opacity: 1; }
+
+        .card-fade-out {
+            animation: fadeSlideOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes fadeSlideOut {
+            0% { opacity: 1; transform: translateX(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-30px) scale(0.95); height: 0; margin: 0; padding: 0; border: none; }
+        }
+        @keyframes fadeSlideIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .card-enter {
+            animation: fadeSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .toggle-track {
+            width: 44px; height: 24px;
+            border-radius: 12px;
+            background: var(--border);
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .toggle-thumb {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            position: absolute;
+            top: 3px; left: 3px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .toggle-thumb.on { transform: translateX(20px); }
+
+        .lang-toggle {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        .lang-btn {
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: var(--text-muted);
+            background: transparent;
+        }
+        .lang-btn.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .category-line {
+            width: 36px; height: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        .category-header:hover .category-line { width: 56px; }
+
+        .thumbnail-wrapper {
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        .thumbnail-wrapper img {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-glass:hover .thumbnail-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .chevron-icon { transition: transform 0.3s ease; }
+        .chevron-icon.rotated { transform: rotate(180deg); }
+
+        .mobile-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 100;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 8px 12px;
+            display: none;
+        }
+        @media (max-width: 1023px) {
+            .mobile-nav { display: flex; }
+        }
+
+        .mobile-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .mobile-nav-item:hover { color: var(--text-primary); }
+        .mobile-nav-item.active {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+        .mobile-nav-dot {
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .mobile-nav-item.active .mobile-nav-dot { opacity: 1; }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            opacity: 0.012;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        .scroll-smooth { scroll-behavior: smooth; }
+
+        .sidebar-glass {
+            width: 256px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .sidebar-glass.collapsed {
+            transform: translateX(-196px);
+        }
+        .sidebar-glass.collapsed .sidebar-text { opacity: 0; pointer-events: none; }
+        .sidebar-glass.collapsed .sidebar-item {
+            padding: 10px 0;
+            justify-content: center;
+            border-left: none;
+        }
+        .sidebar-glass.collapsed .sidebar-item.active {
+            border-left: none;
+            border-radius: 8px;
+        }
+        .sidebar-glass.collapsed .sidebar-icon { margin: 0; }
+        .sidebar-text {
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar-toggle-btn {
+            position: absolute;
+            top: 76px;
+            right: 12px;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            z-index: 41;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .sidebar-toggle-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .sidebar-toggle-btn:hover svg { color: var(--bg-primary) !important; }
+        .sidebar-toggle-btn svg {
+            width: 14px; height: 14px;
+            transition: transform 0.3s ease, color 0.25s ease;
+        }
+        .sidebar-glass.collapsed .sidebar-toggle-btn {
+            right: 12px;
+        }
+        .sidebar-glass.collapsed .sidebar-toggle-btn svg {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-body antialiased">
+    <div class="noise-overlay"></div>
+    <header class="fixed top-0 left-0 right-0 z-50 border-b" style="background: var(--bg-glass); border-color: var(--border); backdrop-filter: blur(20px);">
+        <div class="px-4 sm:px-6 lg:px-10 py-4 flex items-center justify-between max-w-5xl mx-auto" id="header-inner">
+            <div class="flex items-center gap-3">
+                <h1 class="font-display text-xl sm:text-2xl font-bold tracking-tight" style="color: var(--text-primary);" id="site-title">The Daily Brief</h1>
+                <span class="hidden sm:inline-block text-[0.65rem] font-semibold tracking-widest uppercase px-2 py-0.5 rounded" style="color: var(--accent); background: var(--accent-dim);" id="site-subtitle">Premium Edition</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="hidden sm:inline text-xs font-medium tracking-wide uppercase" style="color: var(--text-muted);" id="current-date"></span>
+                <div class="lang-toggle" id="lang-toggle">
+                    <button class="lang-btn active" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="zh">ZH</button>
+                </div>
+                <button id="theme-toggle" aria-label="Toggle dark mode" class="toggle-track">
+                    <span class="toggle-thumb" id="theme-thumb">
+                        <svg id="icon-sun" class="w-3 h-3 hidden" fill="currentColor" style="color: var(--bg-primary);" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
+                        <svg id="icon-moon" class="w-3 h-3" fill="currentColor" style="color: var(--bg-primary);" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <aside class="hidden lg:flex fixed top-0 left-0 bottom-0 z-40 sidebar-glass flex-col pt-20" id="sidebar">
+        <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar">
+            <svg fill="none" stroke="currentColor" style="color: var(--text-secondary);" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="px-4 py-6">
+            <p class="sidebar-text text-[0.65rem] font-semibold uppercase tracking-widest mb-4 px-2" style="color: var(--text-muted);" id="sidebar-label">Categories</p>
+            <nav id="sidebar-nav" class="space-y-1"></nav>
+        </div>
+    </aside>
+    <nav class="mobile-nav" id="mobile-nav"></nav>
+    <main class="pt-24 px-4 sm:px-6 lg:px-10 pb-28 lg:pb-20 max-w-5xl mx-auto" id="main-content">
+        <div id="app"></div>
+    </main>
+    <script src="news_data.js"></script>
+    <script>
+    (function() {
+        const app = document.getElementById('app');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeThumb = document.getElementById('theme-thumb');
+        const iconSun = document.getElementById('icon-sun');
+        const iconMoon = document.getElementById('icon-moon');
+        const dateEl = document.getElementById('current-date');
+        const langToggle = document.getElementById('lang-toggle');
+        const sidebarNav = document.getElementById('sidebar-nav');
+        const mobileNav = document.getElementById('mobile-nav');
+        const siteTitle = document.getElementById('site-title');
+        const siteSubtitle = document.getElementById('site-subtitle');
+
+        let currentLang = localStorage.getItem('lang') || 'en';
+        let activeCategory = null;
+
+        const today = new Date();
+        dateEl.textContent = today.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+        function getTheme() { return localStorage.getItem('theme') || 'light'; }
+
+        function applyTheme(theme) {
+            document.documentElement.classList.remove('light', 'dark');
+            document.documentElement.classList.add(theme);
+            localStorage.setItem('theme', theme);
+            if (theme === 'dark') {
+                themeThumb.classList.add('on');
+                iconSun.classList.remove('hidden');
+                iconMoon.classList.add('hidden');
+            } else {
+                themeThumb.classList.remove('on');
+                iconSun.classList.add('hidden');
+                iconMoon.classList.remove('hidden');
+            }
+        }
+
+        applyTheme(getTheme());
+
+        themeToggle.addEventListener('click', () => {
+            applyTheme(getTheme() === 'light' ? 'dark' : 'light');
+        });
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+
+        function getSidebarState() {
+            return localStorage.getItem('sidebar_collapsed') === 'true';
+        }
+
+        function applySidebarState(collapsed) {
+            localStorage.setItem('sidebar_collapsed', collapsed);
+            if (collapsed) {
+                sidebar.classList.add('collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+            }
+        }
+
+        applySidebarState(getSidebarState());
+
+        sidebarToggleBtn.addEventListener('click', () => {
+            applySidebarState(!getSidebarState());
+        });
+
+        function setLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            langToggle.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            updateUI();
+            renderDashboard();
+            renderSidebar();
+            renderMobileNav();
+        }
+
+        function updateUI() {
+            const ui = newsData.ui[currentLang];
+            siteTitle.textContent = ui.siteTitle;
+            siteSubtitle.textContent = ui.subtitle;
+        }
+
+        langToggle.addEventListener('click', (e) => {
+            const btn = e.target.closest('.lang-btn');
+            if (btn) setLang(btn.dataset.lang);
+        });
+
+        function getHiddenNews() {
+            try { return JSON.parse(localStorage.getItem('hidden_news')) || []; }
+            catch { return []; }
+        }
+
+        function hideNewsItem(id) {
+            const hidden = getHiddenNews();
+            if (!hidden.includes(id)) {
+                hidden.push(id);
+                localStorage.setItem('hidden_news', JSON.stringify(hidden));
+            }
+        }
+
+        function getCategorySlug(name) {
+            return name.toLowerCase().replace(/\s+/g, '-');
+        }
+
+        function renderSidebar() {
+            const ui = newsData.ui[currentLang];
+            const hiddenIds = getHiddenNews();
+            const icons = {
+                "Tech News": `<svg class="sidebar-icon w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`,
+                "AI Updates": `<svg class="sidebar-icon w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>`,
+                "Malaysia News": `<svg class="sidebar-icon w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+                "Football": `<svg class="sidebar-icon w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 2c1.93 0 3.68.69 5.05 1.83L12 8.5 6.95 5.83A7.95 7.95 0 0112 4z"/></svg>`,
+                "Worldwide": `<svg class="sidebar-icon w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>`
+            };
+            let html = '';
+            newsData.categories.forEach(cat => {
+                const visible = cat.items.filter(item => {
+                    if (cat.name === 'Worldwide' && hiddenIds.includes(item.id)) return false;
+                    return true;
+                });
+                if (visible.length === 0) return;
+                const slug = getCategorySlug(cat.name);
+                const label = ui.categories[cat.name] || cat.name;
+                html += `<div class="sidebar-item flex items-center gap-3" data-target="${slug}">
+                    ${icons[cat.name] || ''}
+                    <span class="sidebar-text">${label}</span>
+                </div>`;
+            });
+            sidebarNav.innerHTML = html;
+            sidebarNav.querySelectorAll('.sidebar-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const target = document.getElementById('section-' + el.dataset.target);
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        }
+
+        function renderMobileNav() {
+            const ui = newsData.ui[currentLang];
+            const hiddenIds = getHiddenNews();
+            const icons = {
+                "Tech News": `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`,
+                "AI Updates": `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>`,
+                "Malaysia News": `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+                "Football": `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 2c1.93 0 3.68.69 5.05 1.83L12 8.5 6.95 5.83A7.95 7.95 0 0112 4z"/></svg>`,
+                "Worldwide": `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>`
+            };
+            let html = '';
+            newsData.categories.forEach(cat => {
+                const visible = cat.items.filter(item => {
+                    if (cat.name === 'Worldwide' && hiddenIds.includes(item.id)) return false;
+                    return true;
+                });
+                if (visible.length === 0) return;
+                const slug = getCategorySlug(cat.name);
+                const label = ui.categories[cat.name] || cat.name;
+                const shortLabel = label.length > 6 ? label.substring(0, 5) + '.' : label;
+                html += `<div class="mobile-nav-item" data-target="${slug}">
+                    ${icons[cat.name] || ''}
+                    <span>${shortLabel}</span>
+                    <div class="mobile-nav-dot"></div>
+                </div>`;
+            });
+            mobileNav.innerHTML = html;
+            mobileNav.querySelectorAll('.mobile-nav-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const target = document.getElementById('section-' + el.dataset.target);
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        }
+
+        function updateActiveNav() {
+            const sections = document.querySelectorAll('[data-section-slug]');
+            let current = null;
+            const offset = 120;
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= offset + 100) current = section.dataset.sectionSlug;
+            });
+            if (current && current !== activeCategory) {
+                activeCategory = current;
+                document.querySelectorAll('.sidebar-item').forEach(el => {
+                    el.classList.toggle('active', el.dataset.target === current);
+                });
+                document.querySelectorAll('.mobile-nav-item').forEach(el => {
+                    el.classList.toggle('active', el.dataset.target === current);
+                });
+            }
+        }
+
+        let scrollTick = false;
+        window.addEventListener('scroll', () => {
+            if (!scrollTick) {
+                requestAnimationFrame(() => { updateActiveNav(); scrollTick = false; });
+                scrollTick = true;
+            }
+        });
+
+        function renderDashboard() {
+            const hiddenIds = getHiddenNews();
+            const ui = newsData.ui[currentLang];
+            let html = '';
+            let cardIndex = 0;
+
+            newsData.categories.forEach((category) => {
+                const visibleItems = category.items.filter(item => {
+                    if (category.name === 'Worldwide' && hiddenIds.includes(item.id)) return false;
+                    return true;
+                });
+                if (visibleItems.length === 0) return;
+
+                const slug = getCategorySlug(category.name);
+                const catLabel = ui.categories[category.name] || category.name;
+
+                html += `<section class="mb-16 scroll-mt-28" id="section-${slug}" data-section-slug="${slug}">
+                    <div class="category-header flex items-center gap-4 mb-8">
+                        <div class="category-line"></div>
+                        <h2 class="font-display text-xl font-semibold tracking-tight" style="color: var(--text-primary);">${catLabel}</h2>
+                        <span class="text-xs font-medium px-2 py-0.5 rounded-full" style="background: var(--border); color: var(--text-secondary);">${visibleItems.length}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+
+                visibleItems.forEach((item) => {
+                    const delay = cardIndex * 70;
+                    const isWorldwide = category.name === 'Worldwide';
+                    const content = item[currentLang];
+
+                    html += `<article class="card-glass rounded-xl overflow-hidden card-enter" style="animation-delay: ${delay}ms;" data-id="${item.id}">
+                        <div class="card-clickable cursor-pointer p-5" data-card-id="${item.id}">
+                            <div class="flex gap-4">
+                                <div class="thumbnail-wrapper flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24">
+                                    <img src="${item.image_url}" alt="" class="w-full h-full object-cover" loading="lazy">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-2 mb-1.5">
+                                        <span class="text-[0.7rem] font-semibold uppercase tracking-wider" style="color: var(--accent);">${item.source}</span>
+                                        <svg class="chevron-icon w-4 h-4 flex-shrink-0" style="color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="font-display text-sm sm:text-base font-semibold leading-snug mb-1.5" style="color: var(--text-primary);">${content.title}</h3>
+                                    <p class="text-xs sm:text-sm leading-relaxed line-clamp-2" style="color: var(--text-secondary);">${content.summary}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-content" id="accordion-${item.id}">
+                            <div class="px-5 pb-5">
+                                <div class="border-t pt-4 space-y-3" style="border-color: var(--border);">
+                                    <ul class="space-y-2">
+                                        ${content.details.map(d => `<li class="flex gap-2.5 text-sm leading-relaxed" style="color: var(--text-secondary);">
+                                            <span class="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2" style="background: var(--accent);"></span>
+                                            <span>${d}</span>
+                                        </li>`).join('')}
+                                    </ul>
+                                    <a href="${item.article_url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-semibold mt-3 hover:gap-3 transition-all" style="color: var(--accent);">
+                                        ${ui.readMore}
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                    </a>
+                                    ${isWorldwide ? `<div class="pt-3 border-t mt-4" style="border-color: var(--border);">
+                                        <button class="not-interested-btn text-xs font-medium px-3 py-1.5 rounded-md transition-all hover:opacity-70" style="background: var(--border); color: var(--text-secondary);" data-dismiss-id="${item.id}">
+                                            ${ui.notInterested}
+                                        </button>
+                                    </div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </article>`;
+                    cardIndex++;
+                });
+
+                html += `</div></section>`;
+            });
+
+            app.innerHTML = html;
+            bindEvents();
+            setTimeout(updateActiveNav, 100);
+        }
+
+        function bindEvents() {
+            document.querySelectorAll('.card-clickable').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    if (e.target.closest('.not-interested-btn') || e.target.closest('a')) return;
+                    const id = el.dataset.cardId;
+                    const accordion = document.getElementById('accordion-' + id);
+                    const chevron = el.querySelector('.chevron-icon');
+                    const isOpen = accordion.classList.contains('open');
+                    if (isOpen) {
+                        accordion.style.maxHeight = '0px';
+                        accordion.classList.remove('open');
+                        chevron.classList.remove('rotated');
+                    } else {
+                        accordion.style.maxHeight = accordion.scrollHeight + 'px';
+                        accordion.classList.add('open');
+                        chevron.classList.add('rotated');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.not-interested-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.dismissId;
+                    const card = document.querySelector(`[data-id="${id}"]`);
+                    hideNewsItem(id);
+                    card.classList.add('card-fade-out');
+                    card.addEventListener('animationend', () => {
+                        card.remove();
+                        const worldwideSection = document.querySelector('[data-section-slug="worldwide"]');
+                        if (worldwideSection && worldwideSection.querySelectorAll('article').length === 0) {
+                            worldwideSection.remove();
+                        }
+                        renderSidebar();
+                        renderMobileNav();
+                    });
+                });
+            });
+        }
+
+        setLang(currentLang);
+        document.documentElement.classList.add('scroll-smooth');
+    })();
+    </script>
+</body>
+</html>
