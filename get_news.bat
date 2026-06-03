@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 title Daily Brief Database Sync
 cd /d "%~dp0"
 
