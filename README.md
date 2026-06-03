@@ -45,13 +45,13 @@ No backend. No database. Just a smart build script, an AI model, and static file
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  get_news.bat                        │
-│            (one-click daily trigger)                 │
+│                  get_news.bat                       │
+│            (one-click daily trigger)                │
 └──────────────────────┬──────────────────────────────┘
                        │
                        ▼
 ┌─────────────────────────────────────────────────────┐
-│              build_dashboard.js                      │
+│              build_dashboard.js                     │
 │                                                     │
 │  1. Spawns Claude CLI with Tavily search tool       │
 │  2. Fetches top stories in 2 parallel batches       │
