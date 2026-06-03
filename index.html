@@ -386,7 +386,7 @@
         const siteTitle = document.getElementById('site-title');
         const siteSubtitle = document.getElementById('site-subtitle');
 
-        let currentLang = localStorage.getItem('lang') || 'en';
+        let currentLang = localStorage.getItem('lang') || (navigator.language.toLowerCase().includes('zh') ? 'zh' : 'en');
         let activeCategory = null;
 
         dateEl.textContent = "Last Updated: " + newsData.lastUpdated;

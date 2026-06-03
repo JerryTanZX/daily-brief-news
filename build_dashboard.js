@@ -97,7 +97,7 @@ async function runDailyAutomation() {
 
             // Initiate GitHub Deployments
             console.log("Pushing fresh batch updates to GitHub Pages...");
-            const gitCommand = 'git add news_data.js && git commit -m "Automated daily news update (Batched Build)" && git push origin main';
+            const gitCommand = 'git add news_data.js && git commit -m "Automated daily news update" && git push origin main';
             await execPromise(gitCommand);
             console.log("\x1b[36m%s\x1b[0m", "🚀 Website deployed successfully! Fresh batch data is live!");
 
