@@ -119,7 +119,8 @@ daily-brief-news/
 ├── news_data.js          # AI-generated news data (auto-updated daily)
 ├── build_dashboard.js    # Node.js orchestrator — runs the AI pipeline
 ├── get_news.bat          # Windows one-click launcher
-├── README.md             # You are here
+├── README.md             # English Documentation (You are here)
+├── README.zh.md          # Chinese Documentation
 └── .gitignore
 ```
 
