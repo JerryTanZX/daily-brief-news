@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-ENGLISH|
+ENGLISH |
 <a href="README.zh.md">简体中文</a>
 </p>
 
