@@ -15,6 +15,11 @@
   <img src="https://img.shields.io/badge/Claude_AI-6B4FBB?style=flat&logo=anthropic&logoColor=white" alt="Claude AI"/>
 </p>
 
+<p align="center">
+<a href="README.md">ENGLISH</a>
+|简体中文
+</p>
+
 ---
 
 ## ✨ 这是什么？
