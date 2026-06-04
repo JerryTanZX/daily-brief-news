@@ -60,7 +60,7 @@ No backend. No database. Just a smart build script, an AI model, and static file
 │                                                     │
 │  1. Spawns Claude CLI with Tavily search tool       │
 │  2. Fetches top stories in 2 parallel batches       │
-│  3. Sanitizes output (Chinese quote fix, etc.)      │
+│  3. Sanitizes, validates syntax & auto-repairs      │
 │  4. Writes news_data.js                             │
 │  5. Commits & pushes to GitHub                      │
 └──────────────────────┬──────────────────────────────┘
@@ -140,7 +140,7 @@ Each batch returns structured JavaScript objects with:
 - Thumbnail images
 - Bilingual titles, summaries, and bullet-point details
 
-A **post-processing sanitizer** catches edge cases (like unescaped Chinese quotation marks) before writing the final file — because even AI needs a copy editor. 😄
+A **post-processing sanitizer** catches edge cases (like unescaped Chinese quotation marks) before writing the final file. Output is then validated mechanically with a syntax check — if it fails, Claude is automatically asked to diagnose and repair the broken snippet before retrying, up to 2 times. The file is never written unless the combined output passes a final validation. Because even AI needs a copy editor. 😄
 
 ---
 
